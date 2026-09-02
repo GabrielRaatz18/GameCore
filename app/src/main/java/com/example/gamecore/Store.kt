@@ -23,10 +23,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,6 +43,7 @@ import androidx.compose.ui.unit.dp
 fun StoreScreen(
     cartCount: Int = 3
 ) {
+    var selectedCategory by remember { mutableStateOf("Destaques") }
     val categories = listOf("Destaques", "Ação", "RPG", "Corrida", "Indie", "Multiplayer", "Terror")
 
     GameCorePage(
@@ -71,8 +78,8 @@ fun StoreScreen(
                 categories.forEach { category ->
                     GameCoreCategoryChip(
                         text = category,
-                        selected = category == "Destaques",
-                        onClick = {}
+                        selected = category == selectedCategory,
+                        onClick = { selectedCategory = category }
                     )
                 }
             }
@@ -205,10 +212,13 @@ private fun StoreHeroCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     GameCorePrice(price = price, fontSize = 19)
                     Spacer(Modifier.width(12.dp))
+                    val context = LocalContext.current
                     GameCorePrimaryButton(
                         text = "Ver jogo",
                         modifier = Modifier.width(116.dp),
-                        onClick = {}
+                        onClick = {
+                            Toast.makeText(context, "Abrindo $title...", Toast.LENGTH_SHORT).show()
+                        }
                     )
                 }
             }

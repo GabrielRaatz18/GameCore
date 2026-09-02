@@ -14,7 +14,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             GameCoreTheme {
-                Kart()
+                Game()
             }
         }
     }
@@ -24,6 +24,6 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun GameCorePreview() {
     GameCoreTheme {
-        StoreScreen()
+        KartScreen()
     }
 }

@@ -31,7 +31,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -349,51 +355,67 @@ private fun GameCoreBottomNavigationItem(
 fun GameCoreSearchBar(
     placeholder: String = "Pesquisar jogos",
     showFilter: Boolean = true,
-    onClick: () -> Unit = {},
     onFilterClick: () -> Unit = {}
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(48.dp),
+            .height(56.dp),
         color = GameCoreColors.Search,
         shape = RoundedCornerShape(GameCoreDimens.SearchRadius),
-        border = androidx.compose.foundation.BorderStroke(1.dp, GameCoreColors.Border),
-        onClick = onClick
+        border = androidx.compose.foundation.BorderStroke(1.dp, GameCoreColors.Border)
     ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = null,
-                tint = GameCoreColors.TextSecondary,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = placeholder,
-                color = GameCoreColors.TextSecondary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.weight(1f)
-            )
-            if (showFilter) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clickable(onClick = onFilterClick),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_filter),
-                        contentDescription = "Filtrar",
-                        tint = GameCoreColors.TextSecondary,
-                        modifier = Modifier.size(20.dp)
-                    )
+        TextField(
+            value = searchQuery,
+            onValueChange = { searchQuery = it },
+            modifier = Modifier.fillMaxSize(),
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    color = GameCoreColors.TextSecondary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            leadingIcon = {
+                Icon(
+                    painter = painterResource(R.drawable.ic_search),
+                    contentDescription = null,
+                    tint = GameCoreColors.TextSecondary,
+                    modifier = Modifier.size(20.dp)
+                )
+            },
+            trailingIcon = if (showFilter) {
+                {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clickable(onClick = onFilterClick),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_filter),
+                            contentDescription = "Filtrar",
+                            tint = GameCoreColors.TextSecondary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            }
-        }
+            } else null,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = GameCoreColors.Orange,
+                focusedTextColor = GameCoreColors.TextPrimary,
+                unfocusedTextColor = GameCoreColors.TextPrimary
+            ),
+            singleLine = true,
+            textStyle = MaterialTheme.typography.bodyMedium
+        )
     }
 }
 

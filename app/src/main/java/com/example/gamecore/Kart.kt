@@ -19,12 +19,20 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -35,6 +43,8 @@ import androidx.compose.ui.unit.dp
 fun KartScreen(
     cartCount: Int = 3
 ) {
+    val context = LocalContext.current
+    var couponCode by remember { mutableStateOf("") }
     GameCorePage(
         selectedDestination = GameCoreDestination.CART,
         cartCount = cartCount,
@@ -118,11 +128,32 @@ fun KartScreen(
             Spacer(Modifier.height(10.dp))
             KartPaymentMethod()
 
+            Spacer(Modifier.height(GameCoreDimens.SectionSpacing))
+
+            OutlinedTextField(
+                value = couponCode,
+                onValueChange = { couponCode = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text("Cupom de desconto") },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = GameCoreColors.Orange,
+                    unfocusedBorderColor = GameCoreColors.Border,
+                    focusedLabelColor = GameCoreColors.Orange,
+                    unfocusedLabelColor = GameCoreColors.TextSecondary,
+                    focusedTextColor = GameCoreColors.TextPrimary,
+                    unfocusedTextColor = GameCoreColors.TextPrimary
+                ),
+                singleLine = true
+            )
+
             Spacer(Modifier.height(16.dp))
             GameCorePrimaryButton(
                 text = "Finalizar pagamento",
                 modifier = Modifier.fillMaxWidth(),
-                leadingIcon = R.drawable.ic_lock
+                leadingIcon = R.drawable.ic_lock,
+                onClick = {
+                    Toast.makeText(context, "Processando pagamento...", Toast.LENGTH_LONG).show()
+                }
             )
             Spacer(Modifier.height(8.dp))
             Row(

@@ -22,9 +22,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import android.widget.Toast
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,6 +40,8 @@ import androidx.compose.ui.unit.dp
 fun GameScreen(
     cartCount: Int = 3
 ) {
+    val context = LocalContext.current
+    var isFavorite by remember { mutableStateOf(false) }
     GameCorePage(
         selectedDestination = null,
         cartCount = cartCount,
@@ -104,13 +112,20 @@ fun GameScreen(
                     text = "Adicionar ao carrinho",
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = R.drawable.ic_cart,
-                    onClick = {}
+                    onClick = {
+                        Toast.makeText(context, "Jogo adicionado ao carrinho!", Toast.LENGTH_SHORT).show()
+                    }
                 )
                 Spacer(Modifier.height(8.dp))
                 GameCoreSecondaryButton(
-                    text = "Lista de desejos",
+                    text = if (isFavorite) "Favorito" else "Lista de desejos",
                     modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = R.drawable.ic_favorite
+                    leadingIcon = if (isFavorite) R.drawable.ic_star else R.drawable.ic_favorite,
+                    onClick = {
+                        isFavorite = !isFavorite
+                        val msg = if (isFavorite) "Adicionado aos favoritos" else "Removido dos favoritos"
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
                 )
 
                 Spacer(Modifier.height(GameCoreDimens.SectionSpacing))
