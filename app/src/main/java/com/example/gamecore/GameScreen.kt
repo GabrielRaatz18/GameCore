@@ -1,6 +1,7 @@
 package com.example.gamecore
 
-import androidx.annotation.DrawableRes
+import android.widget.Toast
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -12,9 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -30,22 +31,32 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import android.widget.Toast
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.gamecore.ui.theme.GameCoreTheme
 
 @Composable
 fun GameScreen(
-    cartCount: Int = 3
+    game: GameData,
+    cartCount: Int = 0,
+    onBack: () -> Unit = {},
+    onOpenCart: () -> Unit = {},
+    onAddToCart: () -> Boolean = { false },
+    onDestinationClick: (GameCoreDestination) -> Unit = {}
 ) {
     val context = LocalContext.current
-    var isFavorite by remember { mutableStateOf(false) }
+
+    var isFavorite by remember(game.name) {
+        mutableStateOf(false)
+    }
+
     GameCorePage(
         selectedDestination = null,
         cartCount = cartCount,
-        onDestinationClick = {},
+        onDestinationClick = onDestinationClick,
         topBar = {
             GameCoreTopBar(
                 title = "GameCore",
@@ -53,8 +64,8 @@ fun GameScreen(
                 showSearchAction = true,
                 showCartAction = true,
                 cartCount = cartCount,
-                onBackClick = {},
-                onCartClick = {}
+                onBackClick = onBack,
+                onCartClick = onOpenCart
             )
         }
     ) {
@@ -63,22 +74,26 @@ fun GameScreen(
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
         ) {
-            GameHeroBanner(imageRes = R.drawable.gta6_banner)
+            GameHeroBanner(imageRes = game.imageRes)
 
-            Column(modifier = Modifier.padding(GameCoreDimens.ScreenPadding)) {
+            Column(
+                modifier = Modifier.padding(GameCoreDimens.ScreenPadding)
+            ) {
                 Text(
-                    text = "GRAND THEFT AUTO VI",
+                    text = game.name.uppercase(),
                     color = GameCoreColors.TextPrimary,
                     style = MaterialTheme.typography.headlineLarge
                 )
-                Spacer(Modifier.height(4.dp))
+
+                Spacer(modifier = Modifier.height(4.dp))
+
                 Text(
-                    text = "Ação • Crime • Mundo Aberto",
+                    text = game.category,
                     color = GameCoreColors.TextSecondary,
                     style = MaterialTheme.typography.bodyMedium
                 )
 
-                Spacer(Modifier.height(10.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     repeat(5) {
@@ -88,47 +103,85 @@ fun GameScreen(
                             tint = GameCoreColors.Orange,
                             modifier = Modifier.size(17.dp)
                         )
-                        Spacer(Modifier.width(2.dp))
+
+                        Spacer(modifier = Modifier.width(2.dp))
                     }
-                    Spacer(Modifier.width(8.dp))
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     Text(
                         text = "5,0",
                         color = GameCoreColors.TextPrimary,
                         style = MaterialTheme.typography.labelLarge
                     )
-                    Spacer(Modifier.width(8.dp))
+
+                    Spacer(modifier = Modifier.width(8.dp))
+
                     Text(
-                        text = "10M+ avaliações",
+                        text = "Avaliações dos jogadores",
                         color = GameCoreColors.TextDisabled,
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
-                Spacer(Modifier.height(20.dp))
+                Spacer(modifier = Modifier.height(20.dp))
 
-                GameCorePrice(price = "R$ 550,90", fontSize = 22)
-                Spacer(Modifier.height(10.dp))
+                GameCorePrice(
+                    price = game.price.toBrazilianPrice(),
+                    fontSize = 22
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
                 GameCorePrimaryButton(
                     text = "Adicionar ao carrinho",
                     modifier = Modifier.fillMaxWidth(),
                     leadingIcon = R.drawable.ic_cart,
                     onClick = {
-                        Toast.makeText(context, "Jogo adicionado ao carrinho!", Toast.LENGTH_SHORT).show()
-                    }
-                )
-                Spacer(Modifier.height(8.dp))
-                GameCoreSecondaryButton(
-                    text = if (isFavorite) "Favorito" else "Lista de desejos",
-                    modifier = Modifier.fillMaxWidth(),
-                    leadingIcon = if (isFavorite) R.drawable.ic_star else R.drawable.ic_favorite,
-                    onClick = {
-                        isFavorite = !isFavorite
-                        val msg = if (isFavorite) "Adicionado aos favoritos" else "Removido dos favoritos"
-                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                        val added = onAddToCart()
+
+                        val message = if (added) {
+                            "Jogo adicionado ao carrinho!"
+                        } else {
+                            "Este jogo já está no carrinho."
+                        }
+
+                        Toast.makeText(
+                            context,
+                            message,
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 )
 
-                Spacer(Modifier.height(GameCoreDimens.SectionSpacing))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                GameCoreSecondaryButton(
+                    text = if (isFavorite) "Favorito" else "Lista de desejos",
+                    modifier = Modifier.fillMaxWidth(),
+                    leadingIcon = if (isFavorite) {
+                        R.drawable.ic_star
+                    } else {
+                        R.drawable.ic_favorite
+                    },
+                    onClick = {
+                        isFavorite = !isFavorite
+
+                        val message = if (isFavorite) {
+                            "Adicionado aos favoritos"
+                        } else {
+                            "Removido dos favoritos"
+                        }
+
+                        Toast.makeText(
+                            context,
+                            message,
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                )
+
+                Spacer(modifier = Modifier.height(GameCoreDimens.SectionSpacing))
 
                 Row(
                     modifier = Modifier.horizontalScroll(rememberScrollState()),
@@ -137,68 +190,61 @@ fun GameScreen(
                     GameCoreInfoChip("Single Player")
                     GameCoreInfoChip("Multiplayer")
                     GameCoreInfoChip("4K Ultra HD")
-                    GameCoreInfoChip("Ray Tracing")
                     GameCoreInfoChip("Português")
                 }
 
-                Spacer(Modifier.height(GameCoreDimens.SectionSpacing))
+                Spacer(modifier = Modifier.height(GameCoreDimens.SectionSpacing))
 
                 GameCoreSectionHeader(title = "Sobre este jogo")
-                Spacer(Modifier.height(8.dp))
+
+                Spacer(modifier = Modifier.height(8.dp))
+
                 Text(
-                    text = "Grand Theft Auto VI viaja para o estado de Leonida, lar das ruas ensolaradas de Vice City e além, na maior e mais envolvente evolução da série Grand Theft Auto até agora.",
+                    text = game.description,
                     color = GameCoreColors.TextSecondary,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                Spacer(Modifier.height(6.dp))
-                Text(
-                    text = "Ver mais",
-                    color = GameCoreColors.Orange,
-                    style = MaterialTheme.typography.labelLarge
-                )
 
-                Spacer(Modifier.height(GameCoreDimens.SectionSpacing))
+                if (game.screenshots.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(GameCoreDimens.SectionSpacing))
 
-                GameCoreSectionHeader(title = "Capturas de tela")
-                Spacer(Modifier.height(10.dp))
-                Row(
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    val screenshots = listOf(
-                        R.drawable.gta6_cap1,
-                        R.drawable.gta6_cap2,
-                        R.drawable.gta6_cap3
-                    )
-                    screenshots.forEachIndexed { index, screenshot ->
-                        GameCoreImage(
-                            imageRes = screenshot,
-                            modifier = Modifier
-                                .width(220.dp)
-                                .height(124.dp),
-                            label = "CAPTURA ${index + 1}",
-                            cornerRadius = 12
-                        )
+                    GameCoreSectionHeader(title = "Capturas de tela")
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        game.screenshots.forEachIndexed { index, screenshot ->
+                            GameCoreImage(
+                                imageRes = screenshot,
+                                modifier = Modifier
+                                    .width(220.dp)
+                                    .height(124.dp),
+                                label = "CAPTURA ${index + 1}",
+                                cornerRadius = 12
+                            )
+                        }
                     }
                 }
 
-                Spacer(Modifier.height(GameCoreDimens.SectionSpacing))
+                Spacer(modifier = Modifier.height(GameCoreDimens.SectionSpacing))
 
                 GameCoreSectionHeader(title = "Informações")
-                Spacer(Modifier.height(10.dp))
-                GameInfoCard()
 
-                Spacer(Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                GameInfoCard(game = game)
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
         }
     }
 }
 
 @Composable
-fun Game() = GameScreen()
-
-@Composable
-private fun GameHeroBanner(@DrawableRes imageRes: Int?) {
+private fun GameHeroBanner(imageRes: Int) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -210,18 +256,23 @@ private fun GameHeroBanner(@DrawableRes imageRes: Int?) {
             label = "BANNER DO JOGO",
             cornerRadius = 0
         )
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(heroOverlayBrush())
         )
+
         Surface(
             modifier = Modifier
                 .align(Alignment.Center)
                 .size(58.dp),
             shape = CircleShape,
             color = Color(0xCC151A20),
-            border = androidx.compose.foundation.BorderStroke(1.dp, GameCoreColors.Border)
+            border = BorderStroke(
+                width = 1.dp,
+                color = GameCoreColors.Border
+            )
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -236,42 +287,73 @@ private fun GameHeroBanner(@DrawableRes imageRes: Int?) {
 }
 
 @Composable
-private fun GameInfoCard() {
+private fun GameInfoCard(game: GameData) {
     GameCoreCard {
         Column(modifier = Modifier.padding(14.dp)) {
-            GameInfoRow("Desenvolvedora", "Rockstar Games")
-            Spacer(Modifier.height(10.dp))
-            GameInfoRow("Lançamento", "2025")
-            Spacer(Modifier.height(10.dp))
-            GameInfoRow("Classificação", "18 anos")
-            Spacer(Modifier.height(10.dp))
-            GameInfoRow("Plataforma", "PS5, Xbox Series X/S")
+            GameInfoRow(
+                label = "Desenvolvedora",
+                value = game.developer
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            GameInfoRow(
+                label = "Lançamento",
+                value = game.release
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            GameInfoRow(
+                label = "Classificação",
+                value = game.ageRating
+            )
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            GameInfoRow(
+                label = "Plataforma",
+                value = game.platforms
+            )
         }
     }
 }
 
 @Composable
-private fun GameInfoRow(label: String, value: String) {
+private fun GameInfoRow(
+    label: String,
+    value: String
+) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween
+        verticalAlignment = Alignment.Top
     ) {
         Text(
             text = label,
             color = GameCoreColors.TextSecondary,
-            style = MaterialTheme.typography.bodySmall
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
         )
+
         Text(
             text = value,
             color = GameCoreColors.TextPrimary,
             style = MaterialTheme.typography.bodySmall,
-            fontWeight = FontWeight.Medium
+            fontWeight = FontWeight.Medium,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(1.5f)
         )
     }
 }
 
-@Preview(showBackground = true, widthDp = 360, heightDp = 800)
+@Preview(
+    showBackground = true,
+    widthDp = 360,
+    heightDp = 800
+)
 @Composable
 private fun GamePreview() {
-    GameCoreTheme { GameScreen() }
+    GameCoreTheme {
+        GameScreen(game = storeGames[4])
+    }
 }
